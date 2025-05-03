@@ -3,34 +3,34 @@ using UnityEngine;
 public class Particle : MonoBehaviour
 {
     public float radius = 0.3f;
-    SpriteRenderer spriteRenderer;
     public Vector2 velocity;
-    private float leftBorder, rightBorder, topBorder, bottomBorder;
+
+    SpriteRenderer spriteRenderer;
+    float leftBorder, rightBorder, topBorder, bottomBorder;
+
+    [Range(0f, 2f)] public float drag = 0.2f; 
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.color = Random.ColorHSV();
-        radius = spriteRenderer.bounds.size.x/2;
-        velocity = new Vector2(20, 1);
+        spriteRenderer.color = Color.yellow;
+        radius = spriteRenderer.bounds.size.x / 2;
+
+        velocity = new Vector2(20f,3f);
         SetBorders();
     }
 
     void Update()
     {
-        Move();
+        ApplyPhysics();
         CheckBorders();
     }
 
-    void Move()
+    void ApplyPhysics()
     {
         velocity += Physics2D.gravity * Time.deltaTime;
+        velocity *= (1 - drag * Time.deltaTime);
         transform.position += (Vector3)(velocity * Time.deltaTime);
-    }
-
-    public void HandleCollision(Particle other)
-    {
-        Vector2 collisionNormal = (transform.position - other.transform.position).normalized;
-        velocity = Vector2.Reflect(velocity, collisionNormal);
     }
 
     void SetBorders()
@@ -50,25 +50,31 @@ public class Particle : MonoBehaviour
         if (pos.x - radius < leftBorder)
         {
             pos.x = leftBorder + radius;
-            velocity.x *= -1;
+            velocity.x *= -0.8f; 
         }
         else if (pos.x + radius > rightBorder)
         {
             pos.x = rightBorder - radius;
-            velocity.x *= -1;
+            velocity.x *= -0.8f;
         }
 
         if (pos.y + radius > topBorder)
         {
             pos.y = topBorder - radius;
-            velocity.y *= -1;
+            velocity.y *= -0.8f;
         }
         else if (pos.y - radius < bottomBorder)
         {
             pos.y = bottomBorder + radius;
-            velocity.y *= -1;
+            velocity.y *= -0.8f;
         }
 
         transform.position = pos;
+    }
+
+    public void HandleCollision(Particle other)
+    {
+        Vector2 collisionNormal = (transform.position - other.transform.position).normalized;
+        velocity = Vector2.Reflect(velocity, collisionNormal);
     }
 }

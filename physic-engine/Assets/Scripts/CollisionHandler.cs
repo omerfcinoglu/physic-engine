@@ -23,14 +23,39 @@ public class CollisionHandler : MonoBehaviour
             {
                 Particle a = particles[i];
                 Particle b = particles[j];
-                float dist = Vector2.Distance(a.transform.position, b.transform.position);
 
-                if (dist < a.radius + b.radius)
+                Vector2 delta = b.transform.position - a.transform.position;
+                float dist = delta.magnitude;
+                float penetrationDepth = (a.radius + b.radius) - dist;
+
+                if (penetrationDepth > 0)
                 {
-                    a.HandleCollision(b);
-                    b.HandleCollision(a);
+                    Vector2 collisionNormal = delta.normalized;
+
+                    a.transform.position -= (Vector3)(collisionNormal * penetrationDepth / 2f);
+                    b.transform.position += (Vector3)(collisionNormal * penetrationDepth / 2f);
+
+                    ResolveCollision(a, b, collisionNormal);
                 }
             }
         }
+    }
+
+    void ResolveCollision(Particle a, Particle b, Vector2 collisionNormal)
+    {
+        Vector2 relativeVelocity = b.velocity - a.velocity;
+        float velocityAlongNormal = Vector2.Dot(relativeVelocity, collisionNormal);
+
+        if (velocityAlongNormal > 0)
+            return;
+
+        float restitution = 0.8f; 
+
+        float impulseMagnitude = -(1 + restitution) * velocityAlongNormal / 2;
+
+        Vector2 impulse = impulseMagnitude * collisionNormal;
+
+        a.velocity -= impulse;
+        b.velocity += impulse;
     }
 }
